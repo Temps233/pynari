@@ -14,9 +14,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install mypy coverage
+          pip install mypy coverage build wheel twine flake8
       - name: Build dist and test with unittest on Windows
         run: |
+          python -m build
+          if (Test-Path -Path '.\requirements-test.txt' -PathType Leaf) {pip install -r requirements-test.txt}
+          pip install (Get-ChildItem dist/*.whl)
           python -m unittest
       - name: Generate coverage report
         run: |

@@ -162,7 +162,7 @@ class ImplDouble(Implementation):
 
 class ImplChar(Implementation):
     def build(self, source: char):
-        return source.data.encode("utf-8")
+        return source.encode("utf-8")
 
     def parse(self, source: bytes) -> str:
         return str(source.decode("utf-8"))
@@ -173,8 +173,8 @@ class ImplChar(Implementation):
 
 class ImplVarChar(Implementation):
     def build(self, source: varchar):
-        encoded = source.data.encode("utf-8")
-        return struct.pack("B", len(encoded)) + source.data.encode("utf-8")
+        encoded = source.encode("utf-8")
+        return struct.pack("B", len(encoded)) + source.encode("utf-8")
 
     def parse(self, source: bytes) -> str:
         length = struct.unpack_from("B", source)[0]

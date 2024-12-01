@@ -5,14 +5,15 @@ import struct
 from typing import Any
 from collections import UserString
 
+from pynarist._errors import BuildError, ParseError, UsageError
 
-def registerImpl(source, impl):
+
+def registerImpl(source: type, impl: "Implementation"):
+    if not isinstance(source, type):
+        raise UsageError.new("registerImpl() argument 1 source must be a type")
+    if not isinstance(impl, Implementation):
+        raise UsageError.new("registerImpl() argument 2 impl must be an instance of Implementation")
     __pynarist_impls__[source] = impl
-
-
-def registerImpls(sourceClasses, impl):
-    for source in sourceClasses:
-        registerImpl(source, impl)
 
 
 def _format_class_name(cls):
@@ -20,11 +21,35 @@ def _format_class_name(cls):
 
 
 def getImpl(source) -> "Implementation":
+    if not isinstance(source, type):
+        raise UsageError.new("getImpl() argument 1 source must be a type")
     if source not in __pynarist_impls__:
         raise NotImplementedError(
             f"No implementation found for class `{_format_class_name(source)}'"
         )
-    return __pynarist_impls__[source]
+    
+    impl = __pynarist_impls__[source]    
+    
+    class ImplInterface(Implementation):
+        def build(self, source: Any) -> bytes:
+            try:
+                return impl.build(source)
+            except Exception as e:
+                raise BuildError.new(str(e)) from e
+        
+        def parse(self, source: bytes) -> Any:
+            try:
+                return impl.parse(source)
+            except Exception as e:
+                raise ParseError.new(str(e)) from e
+        
+        def getSize(self, source: Any) -> int:
+            try:
+                return impl.getSize(source)
+            except Exception as e:
+                raise ParseError.new(str(e)) from e
+            
+    return ImplInterface()
 
 
 __pynarist_impls__: dict[type, "Implementation"] = {}
@@ -32,21 +57,25 @@ __pynarist_impls__: dict[type, "Implementation"] = {}
 
 class long(int):
     """a flag for int64 numbers"""
+
     pass
 
 
 class short(int):
     """a flag for int16 numbers"""
+
     pass
 
 
 class byte(int):
     """a flag for int8 numbers"""
+
     pass
 
 
 class double(float):
     """a flag for float64 numbers"""
+
     pass
 
 
@@ -58,7 +87,7 @@ class char(UserString):
     def __init__(self, seq: object) -> None:
         super().__init__(seq)
         if len(self.data) > 1:
-            raise ValueError("char data must be of length 1")
+            raise UsageError.new("char data must be of length 1")
 
 
 class varchar(UserString):
@@ -69,7 +98,7 @@ class varchar(UserString):
     def __init__(self, seq: object) -> None:
         super().__init__(seq)
         if len(self.data) > 255:
-            raise ValueError("varchar data must be of length 255 or less")
+            raise UsageError.new("varchar data must be of length 255 or less")
 
 
 class Implementation:
@@ -81,7 +110,7 @@ class Implementation:
 class ImplInt(Implementation):
     def build(self, source: int):
         if source.bit_length() > 32:
-            raise ValueError(
+            raise UsageError.new(
                 "Integer too large to be packed into 4 bytes. Use the long() flag"
             )
         return struct.pack("i", source)
@@ -96,7 +125,7 @@ class ImplInt(Implementation):
 class ImplLong(Implementation):
     def build(self, source: long):
         if source.bit_length() > 64:
-            raise ValueError(
+            raise UsageError.new(
                 "Long integer too large to be packed into 8 bytes. Use the int() flag"
             )
         return struct.pack("q", source)
@@ -111,7 +140,7 @@ class ImplLong(Implementation):
 class ImplShort(Implementation):
     def build(self, source: short):
         if source.bit_length() > 16:
-            raise ValueError(
+            raise UsageError.new(
                 "Short integer too large to be packed into 2 bytes. Use the int() flag"
             )
         return struct.pack("h", source)
@@ -126,7 +155,7 @@ class ImplShort(Implementation):
 class ImplByte(Implementation):
     def build(self, source: byte):
         if source.bit_length() > 8:
-            raise ValueError(
+            raise UsageError.new(
                 "Byte integer too large to be packed into 1 byte. Use the int() flag"
             )
         return struct.pack("b", source)

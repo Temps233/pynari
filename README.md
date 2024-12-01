@@ -1,5 +1,6 @@
 # Pynarist
-![GitHub last commit](https://img.shields.io/github/last-commit/temps233/pynarist) ![Codecov](https://img.shields.io/codecov/c/github/temps233/pynarist) ![GitHub License](https://img.shields.io/github/license/temps233/pynarist)
+![GitHub last commit](https://img.shields.io/github/last-commit/temps233/pynarist) ![Codecov](https://img.shields.io/codecov/c/github/temps233/pynarist) ![GitHub License](https://img.shields.io/github/license/temps233/pynarist) ![PyPI - Version](https://img.shields.io/pypi/v/pynarist)
+
 
 
 A Python library for parsing and building binary data.

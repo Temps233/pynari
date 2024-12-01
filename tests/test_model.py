@@ -2,13 +2,13 @@
 # for more information, see https://github.com/Temps233/pynarist/blob/master/NOTICE.txt
 from unittest import TestCase
 from pynarist import Model, char, long, byte
+from pynarist._errors import UsageError
 from pynarist._impls import varchar
 
 
 class TestModel(TestCase):
     def test_init_raise(self):
-        with self.assertRaises(TypeError):
-
+        with self.assertRaises(UsageError):
             class A(Model):
                 a: int = 1
 
@@ -16,7 +16,7 @@ class TestModel(TestCase):
         class A(Model):
             a: int
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(UsageError):
             A(a=1, b=2)  # type: ignore
 
     def test_build(self):
@@ -39,28 +39,51 @@ class TestModel(TestCase):
         self.assertEqual(bob.age, 25)
         self.assertEqual(bob.uuid, 69696969)
 
+    def test_getSize(self):
+        class PairInt2Char(Model):
+            a: int
+            b: char
+
+        self.assertEqual(PairInt2Char.getSize(b"\x01\x00\x00\x002"), 5)
+    
+    def test_recursize_getSize(self):
+        class PairI2S(Model):
+            first: int
+            second: varchar
+
+        class Value(Model):
+            name: varchar
+            kvpair: PairI2S
+
+        self.assertEqual(
+            Value.getSize(b"\x03dat\x02\x00\x00\x00\x03abc"),
+            12
+        )
+
     def test_recursive_build(self):
         class PairI2S(Model):
             first: int
             second: varchar
-        
+
         class Value(Model):
             name: varchar
             kvpair: PairI2S
-            
-        data = Value(name=varchar("Bob"), kvpair=PairI2S(first=1, second=varchar("123")))
-        
+
+        data = Value(
+            name=varchar("Bob"), kvpair=PairI2S(first=1, second=varchar("123"))
+        )
+
         self.assertEqual(data.build(), b"\x03Bob\x01\x00\x00\x00\x03123")
-    
+
     def test_recursive_parse(self):
         class PairI2S(Model):
             first: int
             second: varchar
-        
+
         class Value(Model):
             name: varchar
             kvpair: PairI2S
-            
+
         data = b"\x03Bob\x01\x00\x00\x00\x03123"
         value = Value.parse(data)
         self.assertEqual(value.name, "Bob")

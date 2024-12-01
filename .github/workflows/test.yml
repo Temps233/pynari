@@ -11,11 +11,12 @@ jobs:
   test:
     runs-on: windows-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install mypy coverage build wheel twine flake8
-      - name: Build dist and test with unittest on Windows
+      - name: Build dist and test with unittest
         run: |
           python -m build
           if (Test-Path -Path '.\requirements-test.txt' -PathType Leaf) {pip install -r requirements-test.txt}
@@ -23,7 +24,7 @@ jobs:
           python -m unittest
       - name: Generate coverage report
         run: |
-          coverage run --parallel-mode -m unittest
+          coverage run --source pynari --parallel-mode -m unittest
           coverage combine
           coverage xml -i
         env:

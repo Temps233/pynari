@@ -1,9 +1,9 @@
 # Licensed under the Apache License: http://www.apache.org/licenses/LICENSE-2.0
-# for more information, see https://github.com/Temps233/pynari/blob/master/NOTICE.txt
+# for more information, see https://github.com/Temps233/pynarist/blob/master/NOTICE.txt
 from typing import ClassVar, Self, dataclass_transform
 
-from pynari._impls import Implementation, __pynari_impls__, getImpl, registerImpl
-from pynari.inspections import getClassFields
+from pynarist._impls import Implementation, __pynarist_impls__, getImpl, registerImpl
+from pynarist.inspections import getClassFields
 
 
 @dataclass_transform(kw_only_default=True)
@@ -53,5 +53,5 @@ class Model:
         result = 0
         for key, value in cls.fields.items():
             if hasattr(cls, key):
-                result += __pynari_impls__[value].getSize(data)
+                result += __pynarist_impls__[value].getSize(data)
         return result

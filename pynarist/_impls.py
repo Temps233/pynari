@@ -1,5 +1,5 @@
 # Licensed under the Apache License: http://www.apache.org/licenses/LICENSE-2.0
-# for more information, see https://github.com/Temps233/pynari/blob/master/NOTICE.txt
+# for more information, see https://github.com/Temps233/pynarist/blob/master/NOTICE.txt
 
 import struct
 from typing import Any
@@ -7,7 +7,7 @@ from collections import UserString
 
 
 def registerImpl(source, impl):
-    __pynari_impls__[source] = impl
+    __pynarist_impls__[source] = impl
 
 
 def registerImpls(sourceClasses, impl):
@@ -20,14 +20,14 @@ def _format_class_name(cls):
 
 
 def getImpl(source) -> "Implementation":
-    if source not in __pynari_impls__:
+    if source not in __pynarist_impls__:
         raise NotImplementedError(
             f"No implementation found for class `{_format_class_name(source)}'"
         )
-    return __pynari_impls__[source]
+    return __pynarist_impls__[source]
 
 
-__pynari_impls__: dict[type, "Implementation"] = {}
+__pynarist_impls__: dict[type, "Implementation"] = {}
 
 
 class long(int):

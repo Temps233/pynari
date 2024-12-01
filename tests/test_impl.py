@@ -1,7 +1,7 @@
 import struct
 from unittest import TestCase
-from pynari import Model
-from pynari._impls import ImplChar, ImplInt, ImplString, char, getImpl, registerImpl, varchar
+from pynarist import Model
+from pynarist._impls import ImplChar, ImplInt, ImplString, char, getImpl, registerImpl, varchar
 
 class TestImpl(TestCase):
     def test_impl(self):

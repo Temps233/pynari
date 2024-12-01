@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pynari"
+name = "pynarist"
 version = "0.1.0"
 description = "A Python library for parsing and building binary data."
 authors = ["Temps233 <temps233@outlook.com>"]

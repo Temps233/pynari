@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pynari"
+version = "0.1.0"
+description = "A Python library for parsing and building binary data."
+authors = ["Temps233 <temps233@outlook.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

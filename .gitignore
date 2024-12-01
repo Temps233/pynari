@@ -1,7 +1,7 @@
 .vscode/
 .idea/
 .venv/
-.ruff-cache/
+.ruff_cache/
 .pynari-venv/
 __pycache__/
 *.pyc

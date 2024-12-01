@@ -28,4 +28,5 @@ assert parsed.age == 25
 
 ## License
 Copyright (c) 2024 M. Yan
+
 Distributed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0.html).

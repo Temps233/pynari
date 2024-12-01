@@ -24,3 +24,7 @@ parsed = Person.parse(b'\x04John\x19\x00\x00\x00')
 assert parsed.name == 'John'
 assert parsed.age == 25
 ```
+
+## License
+Copyright (c) 2024 M. Yan
+Distributed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0.html).

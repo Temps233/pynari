@@ -1,3 +1,5 @@
+# Licensed under the Apache License: http://www.apache.org/licenses/LICENSE-2.0
+# for more information, see https://github.com/Temps233/pynari/blob/master/NOTICE.txt
 from typing import ClassVar, Self, dataclass_transform
 
 from pynari._impls import Implementation, __pynari_impls__, getImpl, registerImpl

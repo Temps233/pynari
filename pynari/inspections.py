@@ -1,5 +1,7 @@
-from inspect import get_annotations
+# Licensed under the Apache License: http://www.apache.org/licenses/LICENSE-2.0
+# for more information, see https://github.com/Temps233/pynari/blob/master/NOTICE.txt
 
+from inspect import get_annotations
 
 def getClassFields(cls: type):
     fields = get_annotations(cls)

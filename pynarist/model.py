@@ -1,10 +1,10 @@
 # Licensed under the Apache License: http://www.apache.org/licenses/LICENSE-2.0
 # for more information, see https://github.com/Temps233/pynarist/blob/master/NOTICE.txt
+import inspect
 from typing import ClassVar, Self, dataclass_transform
 
 from pynarist._errors import UsageError
 from pynarist._impls import Implementation, __pynarist_impls__, getImpl, registerImpl
-from pynarist.inspections import getClassFields
 
 
 @dataclass_transform(kw_only_default=True)
@@ -12,7 +12,7 @@ class Model:
     fields: ClassVar[dict[str, type[Implementation]]] = {}
 
     def __init_subclass__(cls) -> None:
-        cls.fields = getClassFields(cls)
+        cls.fields = inspect.get_annotations(cls)
 
         class Impl(Implementation):
             def build(_self, source) -> bytes:
@@ -20,6 +20,9 @@ class Model:
 
             def parse(_self, source: bytes) -> Self:
                 return cls.parse(source)
+
+            def parseWithSize(_self, source: bytes) -> tuple[Self, int]:
+                return cls.parseWithSize(source)
 
             def getSize(_self, source: bytes) -> int:
                 return cls.getSize(source)
@@ -42,12 +45,18 @@ class Model:
 
     @classmethod
     def parse(cls, data: bytes) -> Self:
+        return cls.parseWithSize(data)[0]
+
+    @classmethod
+    def parseWithSize(cls, data: bytes) -> tuple[Self, int]:
         result = {}
+        totsize = 0
         for key, value in cls.fields.items():
             impl = getImpl(value)
-            result[key] = impl.parse(data)
-            data = data[impl.getSize(data):]
-        return cls(**result)
+            result[key], size = impl.parseWithSize(data)
+            totsize += size
+            data = data[size:]
+        return cls(**result), totsize
 
     @classmethod
     def getSize(cls, data: bytes) -> int:

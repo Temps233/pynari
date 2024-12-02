@@ -7,11 +7,6 @@ from pynarist._impls import varchar
 
 
 class TestModel(TestCase):
-    def test_init_raise(self):
-        with self.assertRaises(UsageError):
-            class A(Model):
-                a: int = 1
-
     def test_unknown_field(self):
         class A(Model):
             a: int

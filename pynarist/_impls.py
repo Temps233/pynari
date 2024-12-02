@@ -6,6 +6,7 @@ from typing import Any
 from collections import UserString
 
 from pynarist._errors import BuildError, ParseError, UsageError
+from functools import lru_cache
 
 
 def registerImpl(source: type, impl: "Implementation"):
@@ -16,10 +17,12 @@ def registerImpl(source: type, impl: "Implementation"):
     __pynarist_impls__[source] = impl
 
 
+@lru_cache
 def _format_class_name(cls):
     return cls.__module__.replace(".", "/") + "/" + cls.__name__
 
 
+@lru_cache
 def getImpl(source) -> "Implementation":
     if not isinstance(source, type):
         raise UsageError.new("getImpl() argument 1 source must be a type")
@@ -31,6 +34,8 @@ def getImpl(source) -> "Implementation":
     impl = __pynarist_impls__[source]    
     
     class ImplInterface(Implementation):
+        __impl_source__ = source
+        
         def build(self, source: Any) -> bytes:
             try:
                 return impl.build(source)
@@ -40,6 +45,12 @@ def getImpl(source) -> "Implementation":
         def parse(self, source: bytes) -> Any:
             try:
                 return impl.parse(source)
+            except Exception as e:
+                raise ParseError.new(str(e)) from e
+        
+        def parseWithSize(self, source: bytes) -> tuple[Any, int]:
+            try:
+                return impl.parseWithSize(source)
             except Exception as e:
                 raise ParseError.new(str(e)) from e
         
@@ -73,6 +84,12 @@ class byte(int):
     pass
 
 
+class half(float):
+    """a flag for float16 numbers"""
+    
+    pass
+
+
 class double(float):
     """a flag for float64 numbers"""
 
@@ -102,8 +119,10 @@ class varchar(UserString):
 
 
 class Implementation:
+    __impl_source__: type
     def build(self, source: Any) -> bytes: ...
     def parse(self, source: bytes) -> Any: ...
+    def parseWithSize(self, source: bytes) -> tuple[Any, int]: ...
     def getSize(self, source: Any) -> int: ...
 
 
@@ -117,6 +136,9 @@ class ImplInt(Implementation):
 
     def parse(self, source: bytes) -> int:
         return struct.unpack_from("i", source)[0]
+
+    def parseWithSize(self, source: bytes) -> tuple[int, int]:
+        return struct.unpack_from("i", source)[0], 4
 
     def getSize(self, source: bytes):
         return 4
@@ -132,6 +154,9 @@ class ImplLong(Implementation):
 
     def parse(self, source: bytes) -> int:
         return int(struct.unpack_from("q", source)[0])
+    
+    def parseWithSize(self, source: bytes) -> tuple[int, int]:
+        return int(struct.unpack_from("q", source)[0]), 8
 
     def getSize(self, source: bytes):
         return 8
@@ -147,6 +172,9 @@ class ImplShort(Implementation):
 
     def parse(self, source: bytes):
         return int(struct.unpack_from("h", source)[0])
+    
+    def parseWithSize(self, source: bytes) -> tuple[int, int]:
+        return int(struct.unpack_from("h", source)[0]), 2   
 
     def getSize(self, source: bytes) -> int:
         return 2
@@ -162,17 +190,37 @@ class ImplByte(Implementation):
 
     def parse(self, source: bytes) -> int:
         return int(struct.unpack_from("b", source)[0])
+    
+    def parseWithSize(self, source: bytes) -> tuple[int, int]:
+        return int(struct.unpack_from("b", source)[0]), 1
 
     def getSize(self, source: bytes) -> int:
         return 1
 
+
+class ImplHalf(Implementation):
+    def build(self, source: half):
+        return struct.pack("e", source)
+    
+    def parse(self, source: bytes) -> float:
+        return struct.unpack_from("e", source)[0]
+    
+    def parseWithSize(self, source: bytes) -> tuple[float, int]:
+        return struct.unpack_from("e", source)[0], 2
+
+    def getSize(self, source: bytes) -> int:
+        return 2
+    
 
 class ImplFloat(Implementation):
     def build(self, source: float):
         return struct.pack("f", source)
 
     def parse(self, source: bytes) -> float:
-        return struct.unpack("f", source)[0]
+        return struct.unpack_from("f", source)[0]
+    
+    def parseWithSize(self, source: bytes) -> tuple[float, int]:
+        return struct.unpack_from("f", source)[0], 4
 
     def getSize(self, source: bytes) -> int:
         return 4
@@ -183,7 +231,10 @@ class ImplDouble(Implementation):
         return struct.pack("d", source)
 
     def parse(self, source: bytes) -> float:
-        return struct.unpack("d", source)[0]
+        return struct.unpack_from("d", source)[0]
+    
+    def parseWithSize(self, source: bytes) -> tuple[float, int]:
+        return struct.unpack_from("d", source)[0], 8
 
     def getSize(self, source: bytes):
         return 8
@@ -195,6 +246,9 @@ class ImplChar(Implementation):
 
     def parse(self, source: bytes) -> str:
         return str(source.decode("utf-8"))
+    
+    def parseWithSize(self, source: bytes) -> tuple[str, int]:
+        return str(source.decode("utf-8")), 1
 
     def getSize(self, source: bytes) -> int:
         return 1
@@ -208,6 +262,10 @@ class ImplVarChar(Implementation):
     def parse(self, source: bytes) -> str:
         length = struct.unpack_from("B", source)[0]
         return str(source[1 : 1 + length].decode("utf-8"))
+    
+    def parseWithSize(self, source: bytes) -> tuple[str, int]:
+        length = struct.unpack_from("B", source)[0]
+        return str(source[1 : 1 + length].decode("utf-8")), 1 + length
 
     def getSize(self, source: bytes) -> int:
         length = struct.unpack_from("B", source)[0]
@@ -222,6 +280,10 @@ class ImplString(Implementation):
     def parse(self, source: bytes) -> str:
         length = struct.unpack_from("i", source)[0]
         return str(source[4 : 4 + length].decode("utf-8"))
+    
+    def parseWithSize(self, source: bytes) -> tuple[str, int]:
+        length = struct.unpack_from("i", source)[0]
+        return str(source[4 : 4 + length].decode("utf-8")), 4 + length
 
     def getSize(self, source: bytes) -> int:
         length = struct.unpack_from("i", source)[0]
@@ -233,7 +295,10 @@ class ImplBool(Implementation):
         return struct.pack("?", source)
 
     def parse(self, source: bytes) -> bool:
-        return struct.unpack("?", source)[0]
+        return struct.unpack_from("?", source)[0]
+    
+    def parseWithSize(self, source: bytes) -> tuple[bool, int]:
+        return struct.unpack_from("?", source)[0], 1
 
     def getSize(self, source: bytes) -> int:
         return 1
@@ -243,6 +308,7 @@ registerImpl(long, ImplLong())
 registerImpl(int, ImplInt())
 registerImpl(short, ImplShort())
 registerImpl(byte, ImplByte())
+registerImpl(half, ImplHalf())
 registerImpl(float, ImplFloat())
 registerImpl(double, ImplDouble())
 registerImpl(char, ImplChar())

@@ -3,7 +3,14 @@
 
 
 
-A Python library for parsing and building binary data.
+A Python library for parsing and rebuilding binary data structures.
+
+## Goals
++ 🔥 Stunning speed
++ 🔟 Tiny serialized size
++ ✨ Highly readable and well-documented APIs
++ 🌈 Widely support for different data types
++ 🔧 Flexible and customizable
 
 ## Usage
 
@@ -25,6 +32,9 @@ parsed = Person.parse(b'\x04John\x19\x00\x00\x00')
 assert parsed.name == 'John'
 assert parsed.age == 25
 ```
+
+## Benchmarks
+See [Benchmarks.md] for benchmarks
 
 ## License
 Copyright (c) 2024 M. Yan

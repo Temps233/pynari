@@ -1,6 +1,6 @@
 import struct
 from unittest import TestCase
-from pynarist import Model, char, varchar, byte, short, long, double
+from pynarist import Model, char, varchar, byte, short, long, double, half
 from pynarist._errors import BuildError, ParseError, UsageError
 from pynarist._impls import getImpl, registerImpl
 
@@ -25,6 +25,8 @@ class TestImpl(TestCase):
         self.assertEqual(getImpl(short).build(32767), struct.pack("h", 32767))
         self.assertEqual(getImpl(long).build(6969696969), struct.pack("q", 6969696969))
         self.assertEqual(getImpl(int).build(1), struct.pack("i", 1))
+        
+        self.assertEqual(getImpl(half).build(1.0), struct.pack("e", 1.0))
         self.assertEqual(getImpl(float).build(1.0), struct.pack("f", 1.0))
         self.assertEqual(getImpl(double).build(1.0), struct.pack("d", 1.0))
         
@@ -41,7 +43,7 @@ class TestImpl(TestCase):
 
     def test_parse_error(self):
         with self.assertRaises(ParseError):
-            getImpl(bool).parse(b"123")
+            getImpl(short).parse(b"1")
             
         with self.assertRaises(ParseError):
             getImpl(str).getSize(b"123")

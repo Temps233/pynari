@@ -6,8 +6,8 @@ By running the bench, you may get results like this:
 
 | Tool | Serialize Time | Deserialize Time | Size |
 |------|-----------|-------------|------|
-| Pynarist | **285.28 ms** | **443.49 ms** | **18** |
-| Pickle | 281.46 ms | 246.86 ms | 137 |
-| Binpi | 854.79 ms | 1035.09 ms | 17 |
+| Pynarist | **65.3 µs** | **25.6 µs** | **18** |
+| Pickle | 81.7 µs | 18.5 µs | 137 |
+| Binpi | 92.4 µs | 52.9 µs | 17 |
 
 Overall, Pynarist has a very small size and have a good performance, while pickle and binpi have problems about result sizes and performances.

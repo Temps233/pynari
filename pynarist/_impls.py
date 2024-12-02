@@ -17,7 +17,6 @@ def registerImpl(source: type, impl: "Implementation"):
     __pynarist_impls__[source] = impl
 
 
-@lru_cache
 def _format_class_name(cls):
     return cls.__module__.replace(".", "/") + "/" + cls.__name__
 
@@ -36,25 +35,25 @@ def getImpl(source) -> "Implementation":
     class ImplInterface(Implementation):
         __impl_source__ = source
         
-        def build(self, source: Any) -> bytes:
+        def build(self, source: Any) -> bytes: # type: ignore
             try:
                 return impl.build(source)
             except Exception as e:
                 raise BuildError.new(str(e)) from e
         
-        def parse(self, source: bytes) -> Any:
+        def parse(self, source: bytes) -> Any: # type: ignore   
             try:
                 return impl.parse(source)
             except Exception as e:
                 raise ParseError.new(str(e)) from e
         
-        def parseWithSize(self, source: bytes) -> tuple[Any, int]:
+        def parseWithSize(self, source: bytes) -> tuple[Any, int]: # type: ignore
             try:
                 return impl.parseWithSize(source)
             except Exception as e:
                 raise ParseError.new(str(e)) from e
         
-        def getSize(self, source: Any) -> int:
+        def getSize(self, source: Any) -> int: # type: ignore
             try:
                 return impl.getSize(source)
             except Exception as e:

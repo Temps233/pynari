@@ -7,7 +7,7 @@ A Python library for parsing and rebuilding binary data structures.
 
 ## Goals
 + 🔥 Stunning speed
-+ 🔟 Tiny serialized size
++ 🔢 Tiny serialized size
 + ✨ Highly readable and well-documented APIs
 + 🌈 Widely support for different data types
 + 🔧 Flexible and customizable

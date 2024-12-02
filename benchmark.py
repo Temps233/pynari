@@ -4,7 +4,7 @@ import pynarist
 from timeit import timeit as _timeit
 
 def timeit(stmt, globals=None, number=1000000, **kw):
-    return f'{round(_timeit(stmt, globals=globals, number=number) * 1000, 6)} ms'
+    return f'{round(_timeit(stmt, globals=globals, number=number) * 1000 * 1000, 3)} µs'
 
 class PickleColor:
     def __init__(self, name: str, hex_code: str):
@@ -37,24 +37,39 @@ class PynaristPerson(pynarist.Model):
     age: pynarist.byte
     fav_color: PynaristColor
 
+pickleRes = None
+binpiRes = None
+pynaristRes = None
+
 def pickle_build(person: PicklePerson) -> bytes:
     return pickle.dumps(person)
 
 def pickle_parse(data: bytes) -> PicklePerson:
+    global pickleRes
     res = pickle.loads(data)
-    return PicklePerson(res.name, res.age, res.fav_color)
+    pickleRes = PicklePerson(res.name, res.age, res.fav_color)
+    return pickleRes
 
 def binpi_build(person: BinpiPerson) -> bytes:
-    return binpi.serialize(person, binpi.BufferWriter(), endianness=binpi.LITTLE_ENDIAN).buffer
+    #! binpi not well-typed :(
+    return binpi.serialize(
+        person, 
+        binpi.BufferWriter(), 
+        endianness=binpi.LITTLE_ENDIAN
+    ).buffer # type: ignore 
 
 def binpi_parse(data: bytes) -> BinpiPerson:
-    return binpi.deserialize(BinpiPerson, binpi.BufferReader(data), endianness=binpi.LITTLE_ENDIAN)
+    global binpiRes
+    binpiRes = binpi.deserialize(BinpiPerson, binpi.BufferReader(data), endianness=binpi.LITTLE_ENDIAN)
+    return binpiRes
 
 def pynarist_build(person: PynaristPerson) -> bytes:
     return person.build()
 
 def pynarist_parse(data: bytes) -> PynaristPerson:
-    return PynaristPerson.parse(data)
+    global pynaristRes
+    pynaristRes = PynaristPerson.parse(data)
+    return pynaristRes
 
 def bench():
     picklePerson = PicklePerson("Alice", 25, PickleColor("red", "e1e1e1"))
@@ -63,7 +78,7 @@ def bench():
     binpiPerson.name_size = 5
     binpiPerson.name = "Alice"
     binpiPerson.age = 25
-    binpiPerson.fav_color = BinpiColor()
+    binpiPerson.fav_color = BinpiColor() #! binpi not well-typed :( # type: ignore
     binpiPerson.fav_color.name_size = 3
     binpiPerson.fav_color.name = "red"
     binpiPerson.fav_color.hex_code = "e1e1e1"
@@ -89,9 +104,9 @@ def bench():
         "pynaristPerson": pynaristPerson,
     }
     
-    print("pickle build time:", timeit("pickle_build(picklePerson)", globals=namespace, number=100000))
-    print("binpi build time:", timeit("binpi_build(binpiPerson)", globals=namespace, number=100000))
-    print("pynarist build time:", timeit("pynarist_build(pynaristPerson)", globals=namespace, number=100000))
+    print("pickle build time:", timeit("pickle_build(picklePerson)", globals=namespace, number=1))
+    print("binpi build time:", timeit("binpi_build(binpiPerson)", globals=namespace, number=1))
+    print("pynarist build time:", timeit("pynarist_build(pynaristPerson)", globals=namespace, number=1))
     print()
     
     pickleData = pickle_build(picklePerson)
@@ -101,14 +116,18 @@ def bench():
     namespace["binpiData"] = binpiData
     namespace["pynaristData"] = pynaristData
     
-    print("pickle parse time:", timeit("pickle_parse(pickleData)", globals=namespace, number=100000))
-    print("binpi parse time:", timeit("binpi_parse(binpiData)", globals=namespace, number=100000))
-    print("pynarist parse time:", timeit("pynarist_parse(pynaristData)", globals=namespace, number=100000))
+    print("pickle parse time:", timeit("pickle_parse(pickleData)", globals=namespace, number=1))
+    print("binpi parse time:", timeit("binpi_parse(binpiData)", globals=namespace, number=1))
+    print("pynarist parse time:", timeit("pynarist_parse(pynaristData)", globals=namespace, number=1))
     print()
 
     print("pickle size:", len(pickleData))
     print("binpi size:", len(binpiData))
     print("pynarist size:", len(pynaristData))
+    
+    print("pickle result:", pickleRes)
+    print("binpi result:", binpiRes)
+    print("pynarist result:", pynaristRes)
 
 if __name__ == "__main__":
     bench()

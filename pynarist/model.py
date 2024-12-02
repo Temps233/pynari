@@ -1,5 +1,6 @@
 # Licensed under the Apache License: http://www.apache.org/licenses/LICENSE-2.0
 # for more information, see https://github.com/Temps233/pynarist/blob/master/NOTICE.txt
+from functools import lru_cache
 import inspect
 from typing import ClassVar, Self, dataclass_transform
 
@@ -11,7 +12,7 @@ from pynarist._impls import Implementation, __pynarist_impls__, getImpl, registe
 class Model:
     fields: ClassVar[dict[str, type[Implementation]]] = {}
 
-    def __init_subclass__(cls) -> None:
+    def __init_subclass__(cls: type[Self], **kwargs) -> None:
         cls.fields = inspect.get_annotations(cls)
 
         class Impl(Implementation):
@@ -36,6 +37,7 @@ class Model:
             else:
                 raise UsageError(f"Unknown field: {key}")
 
+    @lru_cache
     def build(self) -> bytes:
         result = b""
         for key, value in self.fields.items():
@@ -44,10 +46,12 @@ class Model:
         return result
 
     @classmethod
+    @lru_cache
     def parse(cls, data: bytes) -> Self:
         return cls.parseWithSize(data)[0]
 
     @classmethod
+    @lru_cache
     def parseWithSize(cls, data: bytes) -> tuple[Self, int]:
         result = {}
         totsize = 0
@@ -59,8 +63,12 @@ class Model:
         return cls(**result), totsize
 
     @classmethod
+    @lru_cache
     def getSize(cls, data: bytes) -> int:
         result = 0
         for _, value in cls.fields.items():
             result += getImpl(value).getSize(data[result:])
         return result
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({', '.join(f'{k}={v!r}' for k, v in self.__dict__.items() if k in self.fields)})"

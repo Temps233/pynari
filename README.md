@@ -34,7 +34,7 @@ assert parsed.age == 25
 ```
 
 ## Benchmarks
-See [Benchmarks.md] for benchmarks
+See [Benchmarks.md](Benchmarks.md) for benchmarks
 
 ## License
 Copyright (c) 2024 M. Yan
